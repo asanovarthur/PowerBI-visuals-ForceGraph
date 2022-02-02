@@ -41,34 +41,34 @@ export class VisualBuilder extends VisualBuilderBase<VisualClass> {
     }
 
     public get mainElement() {
-        return this.element.find("g.chartContainer");
+        return this.element.querySelector("g.chartContainer");
     }
 
     public get linkLabels() {
-        return this.mainElement.children("g.linklabelholder");
+        return this.mainElement.querySelectorAll(':scope > g.linklabelholder');
     }
 
     public get nodes() {
-        return this.mainElement.children("g.node");
+        return this.mainElement.querySelectorAll(':scope > g.node');
     }
 
     public get images() {
-        return this.nodes.children("image");
+        return [...this.nodes].map((node) => node.querySelectorAll(':scope > image'));
     }
 
     public get circles() {
-        return this.nodes.children("circle");
+        return [...this.nodes].map((node) => node.querySelectorAll(':scope > circle'));
     }
 
     public get nodeTexts() {
-        return this.nodes.children("text");
+        return [...this.nodes].map((node) => node.querySelectorAll(':scope > text'));
     }
 
     public get linkLabelsText() {
-        return this.linkLabels.children("text.linklabel");
+        return [...this.linkLabels].map((linkLabel) => linkLabel.querySelectorAll(':scope > text.linklabel'));
     }
 
     public get linkLabelsTextPath() {
-        return this.linkLabelsText.children("textpath");
+        return [...this.linkLabelsText].map((linkLabelsText) => [...linkLabelsText].map((e) => e.querySelectorAll(':scope > textpath')));
     }
 }
