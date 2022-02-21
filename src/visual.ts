@@ -64,7 +64,6 @@
 import "./../style/visual.less";
 
 import * as d3 from "d3";
-import * as _ from "lodash";
 import powerbi from "powerbi-visuals-api";
 
 import IViewport = powerbi.IViewport;
@@ -331,6 +330,10 @@ export class ForceGraph implements IVisual {
         return ForceGraphSettings.enumerateObjectInstances(this.settings, options);
     }
 
+    private static isEmpty = passedObj => !(
+        (passedObj && passedObj === Object(passedObj) && Object.keys(passedObj).length !== 0)
+      )
+
     public static converter(
         dataView: DataView,
         colorPalette: IColorPalette,
@@ -360,10 +363,10 @@ export class ForceGraph implements IVisual {
         if (!categorical
             || !categorical.Source
             || !categorical.Target
-            || _.isEmpty(categorical.Source.source)
-            || _.isEmpty(categorical.Source.values)
-            || _.isEmpty(categorical.Target.source)
-            || _.isEmpty(categorical.Target.values)
+            || this.isEmpty(categorical.Source.source)
+            || this.isEmpty(categorical.Source.values)
+            || this.isEmpty(categorical.Target.source)
+            || this.isEmpty(categorical.Target.values)
         ) {
             return null;
         }

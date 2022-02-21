@@ -25,7 +25,6 @@
  */
 
 import powerbi from "powerbi-visuals-api";
-import * as _ from "lodash";
 
 import DataView = powerbi.DataView;
 import DataViewMetadataColumn = powerbi.DataViewMetadataColumn;
@@ -35,12 +34,25 @@ import DataViewValueColumn = powerbi.DataViewValueColumn;
 import DataViewValueColumns = powerbi.DataViewValueColumns;
 
 export class ForceGraphColumns<T> {
+    private static isEmpty = passedObj => !(
+        (passedObj && passedObj === Object(passedObj) && Object.keys(passedObj).length !== 0)
+      )
+
+    private static mapValues = (passedObj, field) => {
+        let newObj: any = {};
+
+        for (let keys in passedObj) {
+            newObj[keys] = field(keys);
+        }
+
+        return newObj;
+    }
+
     public static getMetadataColumns(dataView: DataView): ForceGraphColumns<DataViewMetadataColumn> {
         const columns: DataViewMetadataColumn[] = dataView && dataView.metadata && dataView.metadata.columns;
 
-        return columns && _.mapValues(
-            new ForceGraphColumns<DataViewMetadataColumn>(),
-            (n, i) => columns.filter(x => x.roles && x.roles[i])[0]);
+        return columns && this.mapValues(new ForceGraphColumns<DataViewMetadataColumn>(),
+        (i) => columns.filter(x => x.roles && x.roles[i])[0]);
     }
 
     public static getCategoricalColumns(dataView: DataView) {
@@ -48,9 +60,9 @@ export class ForceGraphColumns<T> {
         const categories: DataViewCategoryColumn[] = categorical && categorical.categories || [];
         const values: DataViewValueColumns = categorical && categorical.values || <DataViewValueColumns>[];
 
-        return categorical && _.mapValues(
+        return categorical && this.mapValues(
             new this<DataViewCategoryColumn & DataViewValueColumn[] & DataViewValueColumns>(),
-            (n, i) => {
+            (i) => {
                 let result: any = categories.filter(x => x.source.roles && x.source.roles[i])[0];
 
                 if (!result) {
@@ -59,7 +71,7 @@ export class ForceGraphColumns<T> {
 
                 if (!result) {
                     result = values.filter(x => x.source.roles && x.source.roles[i]);
-                    if (_.isEmpty(result)) {
+                    if (this.isEmpty(result)) {
                         result = undefined;
                     }
                 }

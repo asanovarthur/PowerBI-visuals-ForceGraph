@@ -25,7 +25,6 @@
  */
 
 import powerbi from "powerbi-visuals-api";
-import * as _ from "lodash";
 
 import DataView = powerbi.DataView;
 import DataViewMetadataColumn = powerbi.DataViewMetadataColumn;
@@ -40,6 +39,10 @@ import { VisualBuilder as ForceGraphBuilder } from "./visualBuilder";
 import { ForceGraphMetadataRoleHelper, ForceGraphTooltipsFactory, ForceGraphTooltipInputObject } from "./../src/tooltipsFactory";
 
 import { ForceGraph } from "./../src/visual";
+
+const uniq = array => [...new Set(array)];
+
+const intersection = (array1, array2) => array1.filter(value => array2.includes(value));
 
 
 describe("ForceGraph", () => {
@@ -156,9 +159,9 @@ describe("ForceGraph", () => {
 
         it("update", (done) => {
             visualBuilder.updateRenderTimeout(dataView, () => {
-                const categorySourceLength: number = _.uniq(dataView.categorical.categories[0].values).length,
-                    categoryTargetLength: number = _.uniq(dataView.categorical.categories[1].values).length,
-                    categorySourceTargetOverlapLength: number = _.intersection(_.uniq(dataView.categorical.categories[0].values), _.uniq(dataView.categorical.categories[1].values)).length;
+                const categorySourceLength: number = uniq(dataView.categorical.categories[0].values).length,
+                    categoryTargetLength: number = uniq(dataView.categorical.categories[1].values).length,
+                    categorySourceTargetOverlapLength: number = intersection(uniq(dataView.categorical.categories[0].values), uniq(dataView.categorical.categories[1].values)).length;
 
                 expect(visualBuilder.mainElement.querySelectorAll(':scope > path.link').length)
                     .toBe(Math.max(categorySourceLength, categoryTargetLength));
@@ -267,7 +270,7 @@ describe("ForceGraph", () => {
                 linkLabelsTextPath.forEach((element: JQuery) => {
                     const text: string = element.text();
                     const secondPart: string[] = text.split(".")[1].split("");
-                    const filtered: string[] = secondPart.filter(x => x && !_.isNaN(_.parseInt(x)));
+                    const filtered: string[] = secondPart.filter(x => x && !isNaN(parseInt(x)));
 
                     expect(filtered.length).toBeLessThan(secondPart.length);
                     expect(filtered.length).toEqual(decimalPlaces);
