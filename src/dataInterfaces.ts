@@ -70,7 +70,7 @@ export interface ForceGraphData {
     minFiles: number;
     maxFiles: number;
     linkedByName: LinkedByName;
-    linkTypes: {};
+    linkTypes: any;
     settings: ForceGraphSettings;
     formatter: IValueFormatter;
 }

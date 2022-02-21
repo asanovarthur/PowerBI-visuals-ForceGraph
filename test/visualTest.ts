@@ -48,15 +48,10 @@ describe("ForceGraph", () => {
         dataView: DataView;
 
     beforeEach(() => {
-        try{
-            visualBuilder = new ForceGraphBuilder(1000, 500);
-            defaultDataViewBuilder = new ForceGraphData();
-    
-            dataView = defaultDataViewBuilder.getDataView();
-            console.log('BEFORE EACH SUCCESS');
-        } catch {
-            console.log('BEFORE EACH ERROR');
-        }
+        visualBuilder = new ForceGraphBuilder(1000, 500);
+        defaultDataViewBuilder = new ForceGraphData();
+
+        dataView = defaultDataViewBuilder.getDataView();
     });
 
     describe("ForceGraphTooltipsFactory", () => {
@@ -157,7 +152,7 @@ describe("ForceGraph", () => {
     });
 
     describe("DOM tests", () => {
-        it("svg element created", () => expect(visualBuilder.element[0]).toBeInDOM());
+        it("svg element created", () => expect(visualBuilder.element).toBeInDOM());
 
         it("update", (done) => {
             visualBuilder.updateRenderTimeout(dataView, () => {
@@ -175,19 +170,19 @@ describe("ForceGraph", () => {
             });
         });
 
-        // xit("curved arrows", () => {
-        //     visualBuilder.updateRenderTimeout(dataView, () => {
-        //         const linkPaths: NodeListOf<Element> = visualBuilder.mainElement.querySelectorAll(':scope > path.link');
-        //         linkPaths.forEach((linkPath) => {
-        //             if (linkPath.get()[0]["__data__"].source.name === linkPath.get()[0]["__data__"].target.name) {
-        //                 let path = linkPath.get()[0].getAttribute("d");
-        //                 let curvedPath = /M (-)*\d*\.?\d* (-)*\d*\.?\d* C (-)*\d*\.?\d* (-)*\d*\.?\d*, (-)*\d*\.?\d* (-)*\d*\.?\d*, (-)*\d*\.?\d* (-)*\d*\.?\d*/;
-        //                 expect(curvedPath.test(path))
-        //                     .toBe(true);
-        //             }
-        //         });
-        //     });
-        // });
+        it("curved arrows", () => {
+            visualBuilder.updateRenderTimeout(dataView, () => {
+                const linkPaths: NodeListOf<Element> = visualBuilder.mainElement.querySelectorAll(':scope > path.link');
+                linkPaths.forEach((linkPath) => {
+                    if (linkPath["__data__"].source.name === linkPath["__data__"].target.name) {
+                        let path = linkPath.getAttribute("d");
+                        let curvedPath = /M (-)*\d*\.?\d* (-)*\d*\.?\d* C (-)*\d*\.?\d* (-)*\d*\.?\d*, (-)*\d*\.?\d* (-)*\d*\.?\d*, (-)*\d*\.?\d* (-)*\d*\.?\d*/;
+                        expect(curvedPath.test(path))
+                            .toBe(true);
+                    }
+                });
+            });
+        });
     });
 
     describe("Format settings test", () => {
