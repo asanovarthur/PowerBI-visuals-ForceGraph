@@ -55,6 +55,24 @@ describe("ForceGraph", () => {
         defaultDataViewBuilder = new ForceGraphData();
 
         dataView = defaultDataViewBuilder.getDataView();
+
+        jasmine.addMatchers({
+            toBeInDOM: function () {
+                return {
+                  compare: function (actual) {
+                    return { pass: document.body.contains(actual) }
+                  }
+                }
+            },
+
+            toBeEmpty: function () {
+                return {
+                  compare: function (actual) {
+                    return { pass: document.querySelector(actual).is(":empty") };
+                  },
+                };
+              },
+        })
     });
 
     describe("ForceGraphTooltipsFactory", () => {
@@ -250,9 +268,9 @@ describe("ForceGraph", () => {
             });
 
             it("links labels on", () => {
-                const linkLabelsTextPath: JQuery<any>[] = visualBuilder.linkLabelsTextPath.map($);
+                const linkLabelsTextPath: any[] = visualBuilder.linkLabelsTextPath;
                 linkLabelsTextPath.forEach((element) => {
-                    const text: string = element.text();
+                    const text: string = element.textContent;
                     expect(text).not.toBeEmpty();
                 });
             });
@@ -265,10 +283,10 @@ describe("ForceGraph", () => {
 
                 visualBuilder.updateFlushAllD3Transitions(dataView);
 
-                const linkLabelsTextPath: JQuery<any>[] = visualBuilder.linkLabelsTextPath.map($);
+                const linkLabelsTextPath: any[] = visualBuilder.linkLabelsTextPath;
 
-                linkLabelsTextPath.forEach((element: JQuery) => {
-                    const text: string = element.text();
+                linkLabelsTextPath.forEach((element: any) => {
+                    const text: string = element[0][0].textContent;
                     const secondPart: string[] = text.split(".")[1].split("");
                     const filtered: string[] = secondPart.filter(x => x && !isNaN(parseInt(x)));
 
@@ -290,7 +308,7 @@ describe("ForceGraph", () => {
 
                 visualBuilder.nodes
                     .forEach((element: Element) => {
-                        expect(element.querySelectorAll(':scope > image')).toBeInDOM();
+                        expect(element.querySelectorAll(':scope > image')[0]).toBeInDOM();
                     });
 
                 (dataView.metadata.objects as any).nodes.displayImage = false;
@@ -298,7 +316,7 @@ describe("ForceGraph", () => {
 
                 visualBuilder.nodes
                     .forEach((element: Element) => {
-                        expect(element.querySelectorAll(':scope > image')).not.toBeInDOM();
+                        expect(element.querySelectorAll(':scope > image')[0]).not.toBeInDOM();
                     });
             });
 
@@ -311,10 +329,10 @@ describe("ForceGraph", () => {
                 dataView = defaultDataViewBuilder.getDataView();
                 visualBuilder.updateFlushAllD3Transitions(dataView);
 
-                const nodeTexts: JQuery<any>[] = visualBuilder.nodeTexts.map($);
+                const nodeTexts: any[] = visualBuilder.nodeTexts;
 
                 nodeTexts.forEach((node) => {
-                    const text: string = node.text();
+                    const text: string = node.textContent;
                     dates.forEach(date => {
                         expect(text).not.toEqual(date.toString());
                     });
@@ -324,9 +342,7 @@ describe("ForceGraph", () => {
 
         describe("Capabilities tests", () => {
             it("all items having displayName should have displayNameKey property", () => {
-                jasmine.getJSONFixtures().fixturesPath = "base";
-
-                let jsonData = getJSONFixture("capabilities.json");
+                let jsonData = fetch("../capabilities.json");
 
                 let objectsChecker: Function = (obj) => {
                     for (let property in obj) {
@@ -358,9 +374,8 @@ describe("ForceGraph", () => {
             visualBuilder.updateFlushAllD3Transitions(dataView);
 
             visualBuilder.images
-                .map($)
-                .forEach((image: JQuery) => {
-                    expect(image.attr("title")).toBeDefined();
+                .forEach((image: any) => {
+                    expect(image[0].getAttribute("title")).toBeDefined();
                 });
         });
 
@@ -377,7 +392,7 @@ describe("ForceGraph", () => {
 
             it("should use `foreground` color as a fill for all of nodes", (done) => {
                 visualBuilder.updateRenderTimeout(dataView, () => {
-                    const circles: JQuery<any>[] = visualBuilder.circles.map($);
+                    const circles: any[] = visualBuilder.circles;
 
                     expect(isColorAppliedToElements(circles, foregroundColor, "fill"));
 
@@ -387,7 +402,7 @@ describe("ForceGraph", () => {
 
             it("should use `background` color as a stroke for all of nodes", (done) => {
                 visualBuilder.updateRenderTimeout(dataView, () => {
-                    const circles: JQuery<any>[] = visualBuilder.circles.map($);
+                    const circles: any[] = visualBuilder.circles;
 
                     expect(isColorAppliedToElements(circles, backgroundColor, "stroke"));
 
@@ -403,7 +418,7 @@ describe("ForceGraph", () => {
                 };
 
                 visualBuilder.updateRenderTimeout(dataView, () => {
-                    const labels: JQuery<any>[] = visualBuilder.nodeTexts.map($);
+                    const labels: any[] = visualBuilder.nodeTexts;
 
                     expect(isColorAppliedToElements(labels, foregroundColor, "fill"));
 
@@ -412,12 +427,12 @@ describe("ForceGraph", () => {
             });
 
             function isColorAppliedToElements(
-                elements: JQuery[],
+                elements: any[],
                 color?: string,
                 colorStyleName: string = "fill"
             ): boolean {
-                return elements.some((element: JQuery) => {
-                    const currentColor: string = element.css(colorStyleName);
+                return elements.some((element: any) => {
+                    const currentColor: string = element[0].style[colorStyleName];
 
                     if (!currentColor || !color) {
                         return currentColor === color;
