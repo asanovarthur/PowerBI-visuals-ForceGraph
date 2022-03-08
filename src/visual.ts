@@ -79,6 +79,7 @@ import VisualUpdateOptions = powerbi.extensibility.visual.VisualUpdateOptions;
 import EnumerateVisualObjectInstancesOptions = powerbi.EnumerateVisualObjectInstancesOptions;
 import VisualObjectInstanceEnumeration = powerbi.VisualObjectInstanceEnumeration;
 import VisualConstructorOptions = powerbi.extensibility.visual.VisualConstructorOptions;
+import IVisualEventService = powerbi.extensibility.IVisualEventService;
 
 import { pixelConverter as PixelConverter } from "powerbi-visuals-utils-typeutils";
 import * as SVGUtil from "powerbi-visuals-utils-svgutils";
@@ -158,9 +159,11 @@ export class ForceGraph implements IVisual {
     private static LinkLabelSelector: ClassAndSelector = createClassAndSelector("linklabel");
     private static NodeSelector: ClassAndSelector = createClassAndSelector("node");
     private static NoAnimationLimit: number = 200;
+    private eventService: IVisualEventService;
 
     private selectionManager: ISelectionManager;
     private host: IVisualHost;
+    private eventService: IVisualEventService;
 
     private static get Href(): string {
         return window.location.href.replace(window.location.hash, "");
@@ -227,6 +230,7 @@ export class ForceGraph implements IVisual {
         this.selectionManager = options.host.createSelectionManager();
         this.host = options.host;
         this.init(options);
+        this.eventService = options.host.eventService;
     }
 
     private init(options: VisualConstructorOptions): void {
@@ -297,6 +301,22 @@ export class ForceGraph implements IVisual {
             .clamp(true);
 
         return scale(value);
+    }
+
+    private handleContextMenu() {
+        this.container.on("contextmenu", (event) => {
+          const dataPoint: any = d3.select(event.target).datum();
+          this.selectionManager.showContextMenu(
+            dataPoint && dataPoint.selectionIds && dataPoint.selectionIds[0]
+              ? dataPoint.selectionIds[0]
+              : {},
+            {
+              x: event.clientX,
+              y: event.clientY,
+            }
+          );
+          event.preventDefault();
+        });
     }
 
     private getLinkColor(
@@ -574,52 +594,61 @@ export class ForceGraph implements IVisual {
         ) {
             return;
         }
+        
+        this.eventService.renderingStarted(options);
 
-        this.data = ForceGraph.converter(
-            options.dataViews[0],
-            this.colorPalette,
-            this.colorHelper,
-            this.host
-        );
-
-        if (!this.data) {
-            this.reset();
-            return;
-        }
-
-        this.viewport = options.viewport;
-
-        const k: number = Math.sqrt(Object.keys(this.data.nodes).length /
-            (this.viewport.width * this.viewport.height));
-
-        this.reset();
-
-        this.forceLayout
-            .gravity(ForceGraph.GravityFactor * k)
-            .links(this.data.links)
-            .size([this.viewport.width, this.viewport.height])
-            .linkDistance(ForceGraph.LinkDistance)
-            .charge(this.settings.size.charge / k);
-
-        this.updateNodes();
-
-        const nodesNum: number = Object.keys(this.data.nodes).length;
-        const theta: number = 1.4;
-
-        if (this.settings.animation.show && nodesNum <= ForceGraph.NoAnimationLimit) {
-            this.forceLayout.on("tick", this.getForceTick());
-            this.forceLayout.theta(theta).start();
-            this.setVisualData(this.container, this.colorPalette, this.colorHelper);
-        } else {
-            this.forceLayout.theta(theta).start();
-
-            for (let i = 0; i < nodesNum; ++i) {
-                this.forceLayout.tick();
+        try {
+            this.data = ForceGraph.converter(
+                options.dataViews[0],
+                this.colorPalette,
+                this.colorHelper,
+                this.host
+            );
+    
+            if (!this.data) {
+                this.reset();
+                return;
             }
-
-            this.forceLayout.stop();
-            this.setVisualData(this.container, this.colorPalette, this.colorHelper);
-            this.forceLayout.on("tick", this.getForceTick());
+    
+            this.viewport = options.viewport;
+    
+            const k: number = Math.sqrt(Object.keys(this.data.nodes).length /
+                (this.viewport.width * this.viewport.height));
+    
+            this.reset();
+    
+            this.forceLayout
+                .gravity(ForceGraph.GravityFactor * k)
+                .links(this.data.links)
+                .size([this.viewport.width, this.viewport.height])
+                .linkDistance(ForceGraph.LinkDistance)
+                .charge(this.settings.size.charge / k);
+    
+            this.updateNodes();
+    
+            const nodesNum: number = Object.keys(this.data.nodes).length;
+            const theta: number = 1.4;
+    
+            if (this.settings.animation.show && nodesNum <= ForceGraph.NoAnimationLimit) {
+                this.forceLayout.on("tick", this.getForceTick());
+                this.forceLayout.theta(theta).start();
+                this.setVisualData(this.container, this.colorPalette, this.colorHelper);
+            } else {
+                this.forceLayout.theta(theta).start();
+    
+                for (let i = 0; i < nodesNum; ++i) {
+                    this.forceLayout.tick();
+                }
+    
+                this.forceLayout.stop();
+                this.setVisualData(this.container, this.colorPalette, this.colorHelper);
+                this.forceLayout.on("tick", this.getForceTick());
+            }
+    
+            this.handleContextMenu();
+            this.eventService.renderingFinished(options);
+        } catch(e) {
+            this.eventService.renderingFailed(options, e);
         }
     }
 
