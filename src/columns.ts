@@ -39,9 +39,9 @@ export class ForceGraphColumns<T> {
       )
 
     private static mapValues = (passedObj, field) => {
-        let newObj: any = {};
+        const newObj: any = {};
 
-        for (let keys in passedObj) {
+        for (const keys in passedObj) {
             newObj[keys] = field(keys);
         }
 
